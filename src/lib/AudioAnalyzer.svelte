@@ -152,34 +152,19 @@
 </script>
 
 <div class="mx-auto max-w-xl px-4 py-16">
-	<div>
-		<Heading class="mt-4 mb-8">Instrument Practice Timer</Heading>
-
-		<Button size="lg" onclick={() => (isPlaying = !isPlaying)}
-			>{isPlaying ? 'Stop' : 'Start'}</Button
-		>
-
-		<p class="mt-2 mb-4 text-xs">{isPlaying ? 'Tracking...' : 'Press start to begin tracking.'}</p>
-		<Badge variant="red">Play Time: {playTime / (1000 / updateRate)} sec</Badge>
-		<Badge variant="purple">Study Time: {studyTime / (1000 / updateRate)} sec</Badge>
-
-		<div class="mt-4">
-			<div class="mb-2 text-sm">Threshold: {threshold}</div>
-			<Slider bind:value={threshold} min={0.01} max={0.2} step={0.01} type="single" />
-		</div>
-
-		<br />
-	</div>
-
-	<Progress marker={threshold * 100} progress={barWidth} max={100} />
-
 	<div class="mt-4 text-sm">
-		<p>Current Volume: {volumeLevel.toFixed(2)}</p>
-		<p>Dominant Frequency: {dominantFreq.toFixed(2)} Hz</p>
-		<p class="mb-4">Piano Note: {dominantNote}</p>
+		<Heading class="mt-4 mb-8">Instrument Practice Timer</Heading>
 		<Heatmap data={heatmapData} />
 		<Progress class="mt-4" {progress} />
-
+		<!-- <p class="mt-2 mb-4 text-xs">{isPlaying ? 'Tracking...' : 'Press start to begin tracking.'}</p> -->
+		<Badge class="mt-4" variant="red">Play Time: {playTime / (1000 / updateRate)} sec</Badge>
+		<Badge class="mt-4" variant="purple">Study Time: {studyTime / (1000 / updateRate)} sec</Badge>
+		<br />
+		<!-- start stop button -->
+		<Button class="mt-4" size="lg" onclick={() => (isPlaying = !isPlaying)}
+			>{isPlaying ? 'Stop' : 'Start'}</Button
+		>
+		<!-- clear history button -->
 		<Button
 			class="mt-4"
 			variant="secondary"
@@ -189,5 +174,14 @@
 		>
 			Reset History
 		</Button>
+		<div class="mt-4">
+			<div class="mb-2 text-sm">Threshold: {threshold}</div>
+			<Slider bind:value={threshold} min={0.01} max={0.2} step={0.01} type="single" />
+		</div>
+		<Progress class="mt-4" marker={threshold * 100} progress={barWidth} max={100} />
+
+		<p class="mt-4">Current Volume: {volumeLevel.toFixed(2)}</p>
+		<p class="mt-4">Dominant Frequency: {dominantFreq.toFixed(2)} Hz</p>
+		<p class="mt-4">Piano Note: {dominantNote}</p>
 	</div>
 </div>
