@@ -8,7 +8,7 @@
 		ref = $bindable(null),
 		progress = $bindable(0),
 		value = $bindable(0),
-		max = $bindable(4),
+		max = $bindable(100),
 
 		marker = undefined,
 
