@@ -54,7 +54,7 @@
 
 <div class="mx-auto max-w-xl px-4 py-16">
 	<div class="mt-4 text-sm">
-		<Heading class="mt-4 mb-8">Instrument Practice Timer</Heading>
+		<Heading class="mt-4 mb-8">Metronome</Heading>
 		<div class="mt-4">
 			<div class="mb-2 text-sm">BPM: {bpm}</div>
 			<Slider bind:value={bpm} min={40} max={208} step={1} type="single" />
