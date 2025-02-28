@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Heatmap from '$lib/heatmap/Heatmap.svelte';
 	import { onMount } from 'svelte';
-	import Progress from '$lib/progress/Progress.svelte';
+	import Progress from './progress/Progress.svelte';
 	import Button from '$lib/button/Button.svelte';
 	import { Heading } from './heading';
 	import Badge from '$lib/badge/Badge.svelte';
@@ -30,6 +30,7 @@
 	let dominantNote = $state<string>('N/A');
 	let heatmapData = $state<(0 | 1 | 2 | 3 | 4)[][]>([]);
 	let progress = $state<number>(0);
+	let trackPeriod = $state<number>(1);
 
 	// Derived state
 	const barWidth = $derived<number>(volumeLevel * 100);
@@ -91,7 +92,7 @@
 		progress = (playTime + studyTime) / (1000 / updateRate);
 		history = [...history, { playTime, studyTime }];
 
-		if ((playTime + studyTime) / (1000 / updateRate) >= 4) {
+		if ((playTime + studyTime) / (1000 / updateRate) >= trackPeriod) {
 			savePlaytimeHistory(playTime, studyTime);
 			playTime = 0;
 			studyTime = 0;
@@ -155,7 +156,7 @@
 	<div class="mt-4 text-sm">
 		<Heading class="mt-4 mb-8">Instrument Practice Timer</Heading>
 		<Heatmap data={heatmapData} />
-		<Progress class="mt-4" {progress} />
+		<Progress class="mt-4" {progress} max={trackPeriod} />
 		<!-- <p class="mt-2 mb-4 text-xs">{isPlaying ? 'Tracking...' : 'Press start to begin tracking.'}</p> -->
 		<Badge class="mt-4" variant="red">Play Time: {playTime / (1000 / updateRate)} sec</Badge>
 		<Badge class="mt-4" variant="purple">Study Time: {studyTime / (1000 / updateRate)} sec</Badge>
@@ -174,12 +175,19 @@
 		>
 			Reset History
 		</Button>
+		<!-- trackPeriod slider -->
+		<div class="mt-4">
+			<div class="mb-2 text-sm">trackPeriod: {trackPeriod}</div>
+			<Slider bind:value={trackPeriod} min={1} max={60} step={1} type="single" />
+		</div>
+		<!-- threshold slider -->
 		<div class="mt-4">
 			<div class="mb-2 text-sm">Threshold: {threshold}</div>
 			<Slider bind:value={threshold} min={0.01} max={0.2} step={0.01} type="single" />
 		</div>
+		<!-- progress  -->
 		<Progress class="mt-4" marker={threshold * 100} progress={barWidth} max={100} />
-
+		<!-- extra stadds -->
 		<p class="mt-4">Current Volume: {volumeLevel.toFixed(2)}</p>
 		<p class="mt-4">Dominant Frequency: {dominantFreq.toFixed(2)} Hz</p>
 		<p class="mt-4">Piano Note: {dominantNote}</p>
