@@ -40,6 +40,7 @@
 	"dependencies": {
 		"bits-ui": "^1.3.4",
 		"chart.js": "^4.4.8",
+		"layerchart": "^1.0.1",
 		"tailwind-variants": "^0.3.1"
 	}
 }
