@@ -93,20 +93,16 @@
 			</Button>
 		</div>
 
-		{#if showPendulumType === 'single'}
-			<!-- Single stick pendulum -->
-			<div class="mt-8 flex justify-center">
-				<div class="relative h-[300px] w-[100px]">
+		<div class="mt-8 flex justify-center">
+			<div class="relative h-[300px] w-[100px]">
+				{#if showPendulumType === 'single'}
+					<!-- Single stick pendulum -->
 					<div
 						class="absolute top-0 left-1/2 h-[300px] w-1 origin-top transform rounded bg-pink-800 transition-transform"
 						style="transform: rotate({pendulumAngle}deg); transition-duration: {transitionTime}s;"
 					></div>
-				</div>
-			</div>
-		{:else}
-			<!-- Multiple sticks pendulum -->
-			<div class="mt-8 flex justify-center">
-				<div class="relative h-[300px] w-[100px]">
+				{:else}
+					<!-- Multiple sticks pendulum -->
 					{#each segments as _, index}
 						<div
 							class="absolute top-0 left-1/2 h-[300px] w-3 origin-top transform rounded-full bg-gradient-to-r from-pink-700 to-pink-900 transition-transform"
@@ -115,8 +111,8 @@
 								transition-delay: {index * 0.03}s;"
 						></div>
 					{/each}
-				</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
 	</div>
 </div>

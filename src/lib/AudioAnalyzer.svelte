@@ -6,6 +6,7 @@
 	import { Heading } from './heading';
 	import Badge from '$lib/badge/Badge.svelte';
 	import Slider from '$lib/slider/Slider.svelte';
+	// import LineGraph from '$lib/line-graph/LineGraph.svelte';
 
 	let audioContext: AudioContext | null = null;
 	let analyser: AnalyserNode | null = null;
@@ -18,6 +19,17 @@
 		studyTime: number;
 		timestamp?: string;
 	}
+
+	// const data = [
+	// 	{ x: new Date('2020-01-01'), value: 10 },
+	// 	{ x: new Date('2020-01-20'), value: 50 },
+	// 	{ x: new Date('2020-02-02'), value: 20 },
+	// 	{ x: new Date('2020-03-03'), value: 30 },
+	// 	{ x: new Date('2020-04-04'), value: 20 },
+	// 	{ x: new Date('2020-04-20'), value: 80 },
+	// 	{ x: new Date('2020-05-05'), value: 50 },
+	// 	{ x: new Date('2020-05-20'), value: 10 }
+	// ];
 
 	// State declarations
 	let playTime = $state<number>(0);
@@ -191,5 +203,6 @@
 		<p class="mt-4">Current Volume: {volumeLevel.toFixed(2)}</p>
 		<p class="mt-4">Dominant Frequency: {dominantFreq.toFixed(2)} Hz</p>
 		<p class="mt-4">Piano Note: {dominantNote}</p>
+		<!-- <LineGraph {data} /> -->
 	</div>
 </div>
