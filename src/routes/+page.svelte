@@ -16,6 +16,6 @@
 		<Metronome />
 	</div>
 	<!-- <div class="mt-4">
-
+		<AudioStats />
 	</div> -->
 </main>

@@ -6,7 +6,7 @@
 	import { Heading } from './heading';
 	import Badge from '$lib/badge/Badge.svelte';
 	import Slider from '$lib/slider/Slider.svelte';
-	// import LineGraph from '$lib/line-graph/LineGraph.svelte';
+	import LineGraph from '$lib/line-graph/LineGraph.svelte';
 
 	let audioContext: AudioContext | null = null;
 	let analyser: AnalyserNode | null = null;
@@ -20,21 +20,11 @@
 		timestamp?: string;
 	}
 
-	// const data = [
-	// 	{ x: new Date('2020-01-01'), value: 10 },
-	// 	{ x: new Date('2020-01-20'), value: 50 },
-	// 	{ x: new Date('2020-02-02'), value: 20 },
-	// 	{ x: new Date('2020-03-03'), value: 30 },
-	// 	{ x: new Date('2020-04-04'), value: 20 },
-	// 	{ x: new Date('2020-04-20'), value: 80 },
-	// 	{ x: new Date('2020-05-05'), value: 50 },
-	// 	{ x: new Date('2020-05-20'), value: 10 }
-	// ];
-
 	// State declarations
 	let playTime = $state<number>(0);
 	let studyTime = $state<number>(0);
 	let history = $state<HistoryEntry[]>([]);
+	let volHistory = $state([]);
 	let threshold = $state<number>(0.1);
 	let isPlaying = $state<boolean>(false);
 	let dominantFreq = $state<number>(0);
@@ -43,7 +33,6 @@
 	let heatmapData = $state<(0 | 1 | 2 | 3 | 4)[][]>([]);
 	let progress = $state<number>(0);
 	let trackPeriod = $state<number>(1);
-
 	// Derived state
 	const barWidth = $derived<number>(volumeLevel * 100);
 
@@ -94,13 +83,13 @@
 		analyser.getByteFrequencyData(dataArray);
 		let volume = dataArray.reduce((a, b) => a + b) / dataArray.length / 255;
 		volumeLevel = volume;
-
 		if (volume > threshold) {
 			playTime += 1;
 		} else {
 			studyTime += 1;
 		}
 
+		volHistory.push({ x: new Date(), value: volumeLevel });
 		progress = (playTime + studyTime) / (1000 / updateRate);
 		history = [...history, { playTime, studyTime }];
 
@@ -108,6 +97,7 @@
 			savePlaytimeHistory(playTime, studyTime);
 			playTime = 0;
 			studyTime = 0;
+			volHistory = [];
 		}
 
 		const freq = getDominantFrequency();
@@ -164,22 +154,26 @@
 	});
 </script>
 
-<div class="mx-auto max-w-xl rounded-lg border border-pink-300 px-4 py-4">
+<div
+	class="mx-auto max-w-xl rounded-2xl border border-pink-900 px-4 py-4 shadow-lg shadow-pink-600/60"
+>
 	<div class=" text-sm">
 		<Heading class=" mb-8">Instrument Practice Timer</Heading>
 		<Heatmap data={heatmapData} />
-		<Progress class="mt-4" {progress} max={trackPeriod} />
+
+		<!-- start stop button -->
+		<Button class="mt-4" size="sm" onclick={() => (isPlaying = !isPlaying)}
+			>{isPlaying ? 'Stop' : 'Start'}</Button
+		>
 		<!-- <p class="mt-2 mb-4 text-xs">{isPlaying ? 'Tracking...' : 'Press start to begin tracking.'}</p> -->
 		<Badge class="mt-4" variant="red">Play Time: {playTime / (1000 / updateRate)} sec</Badge>
 		<Badge class="mt-4" variant="purple">Study Time: {studyTime / (1000 / updateRate)} sec</Badge>
-		<br />
-		<!-- start stop button -->
-		<Button class="mt-4" size="lg" onclick={() => (isPlaying = !isPlaying)}
-			>{isPlaying ? 'Stop' : 'Start'}</Button
-		>
+		<!-- <br /> -->
+
 		<!-- clear history button -->
 		<Button
 			class="mt-4"
+			size="sm"
 			variant="secondary"
 			onclick={() => {
 				localStorage.removeItem('playtimeHistory');
@@ -187,22 +181,26 @@
 		>
 			Reset History
 		</Button>
-		<!-- trackPeriod slider -->
-		<div class="mt-4">
-			<div class="mb-2 text-sm">trackPeriod: {trackPeriod}</div>
-			<Slider bind:value={trackPeriod} min={1} max={60} step={1} type="single" />
+		<div class="mt-4 flex items-center gap-4">
+			<!-- trackPeriod slider -->
+			<div class="flex-1">
+				<div class="mb-2 text-sm">Track Period in Seconds: {trackPeriod}</div>
+				<Slider bind:value={trackPeriod} min={1} max={60} step={1} type="single" />
+				<Progress class="mt-4" {progress} max={trackPeriod} />
+			</div>
+			<!-- threshold slider -->
+			<div class="flex-1">
+				<div class="mb-2 text-sm">Threshold: {threshold}</div>
+				<Slider bind:value={threshold} min={0.01} max={0.2} step={0.01} type="single" />
+				<!-- progress  -->
+				<Progress class="mt-4" marker={threshold * 100} progress={barWidth} max={100} />
+			</div>
 		</div>
-		<!-- threshold slider -->
-		<div class="mt-4">
-			<div class="mb-2 text-sm">Threshold: {threshold}</div>
-			<Slider bind:value={threshold} min={0.01} max={0.2} step={0.01} type="single" />
-		</div>
-		<!-- progress  -->
-		<Progress class="mt-4" marker={threshold * 100} progress={barWidth} max={100} />
+
 		<!-- extra stadds -->
 		<p class="mt-4">Current Volume: {volumeLevel.toFixed(2)}</p>
+		<LineGraph data={volHistory} />
 		<p class="mt-4">Dominant Frequency: {dominantFreq.toFixed(2)} Hz</p>
 		<p class="mt-4">Piano Note: {dominantNote}</p>
-		<!-- <LineGraph {data} /> -->
 	</div>
 </div>

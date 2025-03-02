@@ -35,15 +35,18 @@
 	});
 </script>
 
-<div class="mx-auto max-w-xl rounded-lg border border-pink-300 px-4 py-4">
+<div
+	class="mx-auto max-w-xl rounded-2xl border border-pink-900 px-4 py-4 shadow-lg shadow-pink-500/70"
+>
 	<div class="text-sm">
 		<Heading class="mt-0 mb-8">Metronome</Heading>
 		<!-- metronome pads -->
 		<div class="visualizer flex h-24 gap-2">
 			{#each Array(timeSignature) as _, i}
 				<div
-					class="bar flex-1 rounded-md bg-gray-200 transition-colors duration-100 {activeBeat === i
-						? '!bg-pink-500 shadow-lg shadow-pink-500/50'
+					class="bar flex-1 rounded-md bg-pink-900/10 transition-colors duration-100 {activeBeat ===
+					i
+						? '!bg-pink-900 shadow-lg shadow-pink-500/60'
 						: ''}"
 				></div>
 			{/each}

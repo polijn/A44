@@ -68,7 +68,9 @@
 	});
 </script>
 
-<div class="mx-auto max-w-xl rounded-lg border border-pink-300 px-4 py-4">
+<div
+	class="mx-auto max-w-xl rounded-2xl border border-pink-900 px-4 py-4 shadow-inner shadow-pink-600"
+>
 	<div class="mt-4 text-sm">
 		<Heading class="mt-4 mb-8">Metronome</Heading>
 		<div class="mt-4">

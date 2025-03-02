@@ -8,7 +8,7 @@
 	import { format } from 'date-fns';
 
 	const defaultValueFormat = (value: any) => {
-		return formatDate(value, PeriodType.Month, { variant: 'short' });
+		return formatDate(value, PeriodType.TimeOnly, { variant: 'short' });
 	};
 
 	let { data } = $props();
