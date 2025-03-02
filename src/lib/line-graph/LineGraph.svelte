@@ -48,10 +48,7 @@
 				format={defaultValueFormat}
 				ticks={Math.min(data.length, 10)}
 			/>
-			<Spline
-				class="stroke-accent-500 fill-transparent stroke-4 [stroke-linecap:round]"
-				curve={curveCatmullRom}
-			/>
+			<Spline class="stroke-accent-500 fill-transparent stroke-4 [stroke-linecap:round]" />
 			<Highlight
 				lines
 				points={{

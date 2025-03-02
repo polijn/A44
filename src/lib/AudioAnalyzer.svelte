@@ -120,7 +120,7 @@
 		analyser.getByteFrequencyData(dataArray);
 		const startTime = Date.now();
 		currentFreqs = Array.from(dataArray, (value, index) => ({
-			x: new Date(startTime + index),
+			x: new Date(startTime + index * 1000),
 			value: value
 		}));
 		let maxIndex = dataArray.indexOf(Math.max(...dataArray));
@@ -202,7 +202,7 @@
 		</div>
 
 		<!-- extra stadds -->
-		<p class="mt-4">Current Volume: {volumeLevel.toFixed(2)}</p>
+		<!-- <p class="mt-4">Current Volume: {volumeLevel.toFixed(2)}</p> -->
 		<LineGraph data={volHistory} />
 		<div class="mt-4 flex items-center gap-2">
 			<div
