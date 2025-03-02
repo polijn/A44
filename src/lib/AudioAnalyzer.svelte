@@ -120,10 +120,9 @@
 		analyser.getByteFrequencyData(dataArray);
 		const startTime = Date.now();
 		currentFreqs = Array.from(dataArray, (value, index) => ({
-			x: new Date(startTime + index * 1000), // Add 1 second per entry
+			x: new Date(startTime + index),
 			value: value
 		}));
-		// console.log('ferq data: ', result);
 		let maxIndex = dataArray.indexOf(Math.max(...dataArray));
 		if (maxIndex > 0 && maxIndex < dataArray.length - 1) {
 			const prev = dataArray[maxIndex - 1];
@@ -205,7 +204,7 @@
 		<!-- extra stadds -->
 		<p class="mt-4">Current Volume: {volumeLevel.toFixed(2)}</p>
 		<LineGraph data={volHistory} />
-		<div class="mt-4 flex items-center gap-4">
+		<div class="mt-4 flex items-center gap-2">
 			<div
 				class="flex h-20 w-20 items-center justify-center rounded-2xl border border-pink-900 px-4 py-4 text-2xl"
 			>

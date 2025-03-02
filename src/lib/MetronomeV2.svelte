@@ -46,7 +46,7 @@
 				<div
 					class="bar flex-1 rounded-md bg-pink-900/10 transition-colors duration-100 {activeBeat ===
 					i
-						? '!bg-pink-900 shadow-lg shadow-pink-500/60'
+						? '!bg-pink-700 '
 						: ''}"
 				></div>
 			{/each}
