@@ -25,6 +25,7 @@
 	let studyTime = $state<number>(0);
 	let history = $state<HistoryEntry[]>([]);
 	let volHistory = $state([]);
+	let currentFreqs = $state([]);
 	let threshold = $state<number>(0.1);
 	let isPlaying = $state<boolean>(false);
 	let dominantFreq = $state<number>(0);
@@ -41,7 +42,6 @@
 			localStorage.getItem('playtimeHistory') || '[]'
 		);
 		heatmapData = processHistoryData(storedHistory);
-		console.log('heatmap data ', heatmapData);
 	});
 
 	function processHistoryData(history: HistoryEntry[]): (0 | 1 | 2 | 3 | 4)[][] {
@@ -118,7 +118,12 @@
 		if (!analyser || !audioContext) return 0;
 		let dataArray = new Uint8Array(analyser.frequencyBinCount);
 		analyser.getByteFrequencyData(dataArray);
-
+		const startTime = Date.now();
+		currentFreqs = Array.from(dataArray, (value, index) => ({
+			x: new Date(startTime + index * 1000), // Add 1 second per entry
+			value: value
+		}));
+		// console.log('ferq data: ', result);
 		let maxIndex = dataArray.indexOf(Math.max(...dataArray));
 		if (maxIndex > 0 && maxIndex < dataArray.length - 1) {
 			const prev = dataArray[maxIndex - 1];
@@ -200,7 +205,19 @@
 		<!-- extra stadds -->
 		<p class="mt-4">Current Volume: {volumeLevel.toFixed(2)}</p>
 		<LineGraph data={volHistory} />
-		<p class="mt-4">Dominant Frequency: {dominantFreq.toFixed(2)} Hz</p>
-		<p class="mt-4">Piano Note: {dominantNote}</p>
+		<div class="mt-4 flex items-center gap-4">
+			<div
+				class="flex h-20 w-20 items-center justify-center rounded-2xl border border-pink-900 px-4 py-4 text-2xl"
+			>
+				{dominantNote}
+			</div>
+			<div
+				class="flex h-20 items-center justify-center rounded-2xl border border-pink-900 px-4 py-4 text-2xl"
+			>
+				<p>Dominant Frequency: {dominantFreq.toFixed(2)} Hz</p>
+			</div>
+		</div>
+
+		<LineGraph data={currentFreqs} />
 	</div>
 </div>
