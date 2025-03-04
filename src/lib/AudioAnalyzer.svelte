@@ -1,12 +1,11 @@
 <script lang="ts">
 	import Heatmap from '$lib/heatmap/Heatmap.svelte';
-	import { onMount } from 'svelte';
 	import Progress from './progress/Progress.svelte';
 	import Button from '$lib/button/Button.svelte';
 	import { Heading } from './heading';
 	import Badge from '$lib/badge/Badge.svelte';
 	import Slider from '$lib/slider/Slider.svelte';
-	import LineGraph from '$lib/line-graph/LineGraph.svelte';
+	import { onMount } from 'svelte';
 
 	let audioContext: AudioContext | null = null;
 	let analyser: AnalyserNode | null = null;
@@ -25,7 +24,6 @@
 	let studyTime = $state<number>(0);
 	let history = $state<HistoryEntry[]>([]);
 	let volHistory = $state([]);
-	let currentFreqs = $state([]);
 	let threshold = $state<number>(0.1);
 	let isPlaying = $state<boolean>(false);
 	let dominantFreq = $state<number>(0);
@@ -34,16 +32,87 @@
 	let heatmapData = $state<(0 | 1 | 2 | 3 | 4)[][]>([]);
 	let progress = $state<number>(0);
 	let trackPeriod = $state<number>(1);
+	let transposition = $state<number>(-2);
 	// Derived state
 	const barWidth = $derived<number>(volumeLevel * 100);
 
-	onMount(() => {
-		const storedHistory: HistoryEntry[] = JSON.parse(
-			localStorage.getItem('playtimeHistory') || '[]'
+	let pitchDetector = undefined;
+	let noteData = [];
+
+	onMount(async () => {
+		const res = await fetch(
+			'https://gist.githubusercontent.com/dimitre/439f5ab75a0c2e66c8c63fc9e8f7ea77/raw/65cc3bf37ac4d0b4ab268b41bf60077eae48e25e/note_freq_440_432.csv'
 		);
-		heatmapData = processHistoryData(storedHistory);
+		const text = await res.text();
+		noteData = text
+			.trim()
+			.split('\n')
+			.map((line) => {
+				const [midi, note, octave, freq440, freq432] = line.split(',');
+				return {
+					midi: parseInt(midi, 10),
+					note,
+					octave: parseInt(octave, 10),
+					freq440: parseFloat(freq440),
+					freq432: parseFloat(freq432)
+				};
+			});
 	});
 
+	async function startTracking(): Promise<void> {
+		if (audioContext) return;
+
+		audioContext = new AudioContext({ sampleRate: 48000 });
+		analyser = audioContext.createAnalyser();
+
+		const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+		microphone = audioContext.createMediaStreamSource(stream);
+		pitchDetector = ml5.pitchDetection(
+			'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/',
+			audioContext,
+			microphone.mediaStream,
+			modelLoaded
+		);
+
+		interval = setInterval(trackAudio, updateRate);
+	}
+
+	function gotPitch(error, frequency) {
+		pitchDetector.getPitch(gotPitch);
+		if (frequency) {
+			dominantFreq = frequency;
+			dominantNote = getClosestNoteTo440(frequency);
+		}
+	}
+
+	function modelLoaded() {
+		pitchDetector.getPitch(gotPitch);
+	}
+
+	function stopTracking(): void {
+		clearInterval(interval);
+		isPlaying = false;
+	}
+
+	function trackAudio(): void {
+		volumeLevel = 10;
+		if (volumeLevel > threshold) {
+			playTime += 1;
+		} else {
+			studyTime += 1;
+		}
+
+		volHistory.push({ x: new Date(), value: volumeLevel });
+		progress = (playTime + studyTime) / (1000 / updateRate);
+
+		if ((playTime + studyTime) / (1000 / updateRate) >= trackPeriod) {
+			history.push({ playTime, studyTime, timestamp: new Date().toISOString() });
+			heatmapData = processHistoryData(history);
+			playTime = 0;
+			studyTime = 0;
+			volHistory = [];
+		}
+	}
 	function processHistoryData(history: HistoryEntry[]): (0 | 1 | 2 | 3 | 4)[][] {
 		if (history.length > 30) history = history.slice(-30 * 7 - (history.length % 7));
 
@@ -56,92 +125,24 @@
 			})
 		) as (0 | 1 | 2 | 3 | 4)[][];
 	}
+	function getClosestNoteTo440(frequency: number) {
+		if (!noteData.length) return 'Loading...';
 
-	async function startTracking(): Promise<void> {
-		if (audioContext) return;
+		let closestNote = noteData.reduce((prev, curr) => {
+			return Math.abs(curr.freq440 - frequency) < Math.abs(prev.freq440 - frequency) ? curr : prev;
+		});
 
-		audioContext = new AudioContext({ sampleRate: 48000 });
-		analyser = audioContext.createAnalyser();
+		const index = noteData.indexOf(closestNote);
+		const noteUp = index + 1 < noteData.length ? noteData[index + 1] : null;
+		const noteDown = index - 1 >= 0 ? noteData[index - 1] : null;
+		const transPose = noteData[index - transposition];
 
-		const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-		microphone = audioContext.createMediaStreamSource(stream);
-		microphone.connect(analyser);
-		analyser.fftSize = 2048;
-		analyser.smoothingTimeConstant = 0.2;
-
-		interval = setInterval(trackAudio, updateRate);
-	}
-
-	function stopTracking(): void {
-		clearInterval(interval);
-		isPlaying = false;
-	}
-
-	function trackAudio(): void {
-		if (!analyser) return;
-		let dataArray = new Uint8Array(analyser.frequencyBinCount);
-		analyser.getByteFrequencyData(dataArray);
-		let volume = dataArray.reduce((a, b) => a + b) / dataArray.length / 255;
-		volumeLevel = volume;
-		if (volume > threshold) {
-			playTime += 1;
-		} else {
-			studyTime += 1;
-		}
-
-		volHistory.push({ x: new Date(), value: volumeLevel });
-		progress = (playTime + studyTime) / (1000 / updateRate);
-		history = [...history, { playTime, studyTime }];
-
-		if ((playTime + studyTime) / (1000 / updateRate) >= trackPeriod) {
-			savePlaytimeHistory(playTime, studyTime);
-			playTime = 0;
-			studyTime = 0;
-			volHistory = [];
-		}
-
-		const freq = getDominantFrequency();
-		dominantFreq = freq;
-		dominantNote = getNoteFromFrequency(freq);
-	}
-
-	function savePlaytimeHistory(playTime: number, studyTime: number): void {
-		const currentHistory: HistoryEntry[] = JSON.parse(
-			localStorage.getItem('playtimeHistory') || '[]'
-		);
-		currentHistory.push({ playTime, studyTime, timestamp: new Date().toISOString() });
-		localStorage.setItem('playtimeHistory', JSON.stringify(currentHistory));
-		heatmapData = processHistoryData(currentHistory);
-	}
-
-	function getDominantFrequency(): number {
-		if (!analyser || !audioContext) return 0;
-		let dataArray = new Uint8Array(analyser.frequencyBinCount);
-		analyser.getByteFrequencyData(dataArray);
-		const startTime = Date.now();
-		currentFreqs = Array.from(dataArray, (value, index) => ({
-			x: new Date(startTime + index * 1000),
-			value: value
-		}));
-		let maxIndex = dataArray.indexOf(Math.max(...dataArray));
-		if (maxIndex > 0 && maxIndex < dataArray.length - 1) {
-			const prev = dataArray[maxIndex - 1];
-			const next = dataArray[maxIndex + 1];
-			const delta = (next - prev) / (2 * (2 * dataArray[maxIndex] - prev - next));
-			maxIndex += delta;
-		}
-
-		return (maxIndex / analyser.frequencyBinCount) * (audioContext.sampleRate / 2);
-	}
-
-	function getNoteFromFrequency(frequency: number): string {
-		if (frequency === 0) return 'N/A';
-		const A4 = 440;
-		const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-		let noteNumber = Math.round(12 * Math.log2(frequency / A4) + 49);
-		let noteIndex = (noteNumber - 1) % 12;
-		let octave = Math.floor((noteNumber - 1) / 12) - 1;
-		return noteNames[noteIndex] + octave;
+		return {
+			note: `${closestNote.note}${closestNote.octave}`,
+			distanceUp: noteUp ? noteUp.freq440 - closestNote.freq440 : null,
+			distanceDown: noteDown ? closestNote.freq440 - noteDown.freq440 : null,
+			transPose: `${transPose.note}${transPose.octave}`
+		};
 	}
 
 	$effect(() => {
@@ -175,7 +176,7 @@
 		<!-- <br /> -->
 
 		<!-- clear history button -->
-		<Button
+		<!-- <Button
 			class="mt-4"
 			size="sm"
 			variant="secondary"
@@ -184,7 +185,7 @@
 			}}
 		>
 			Reset History
-		</Button>
+		</Button> -->
 		<div class="mt-4 flex items-center gap-4">
 			<!-- trackPeriod slider -->
 			<div class="flex-1">
@@ -202,21 +203,22 @@
 		</div>
 
 		<!-- extra stadds -->
-		<!-- <p class="mt-4">Current Volume: {volumeLevel.toFixed(2)}</p> -->
-		<LineGraph data={volHistory} />
 		<div class="mt-4 flex items-center gap-2">
 			<div
 				class="flex h-20 w-20 items-center justify-center rounded-2xl border border-pink-900 px-4 py-4 text-2xl"
 			>
-				{dominantNote}
+				{dominantNote.note}
 			</div>
 			<div
 				class="flex h-20 items-center justify-center rounded-2xl border border-pink-900 px-4 py-4 text-2xl"
 			>
-				<p>Dominant Frequency: {dominantFreq.toFixed(2)} Hz</p>
+				<p>{dominantFreq.toFixed(2)} Hz</p>
+			</div>
+			<div
+				class="flex h-20 items-center justify-center rounded-2xl border border-violet-900 px-4 py-4 text-2xl"
+			>
+				<p>Transposed: {dominantNote.transPose}</p>
 			</div>
 		</div>
-
-		<LineGraph data={currentFreqs} />
 	</div>
 </div>
