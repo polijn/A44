@@ -217,7 +217,7 @@
 			<div
 				class="flex h-20 items-center justify-center rounded-2xl border border-violet-900 px-4 py-4 text-2xl"
 			>
-				<p>Transposed: {dominantNote.transPose}</p>
+				<p>Transposed (-2): {dominantNote.transPose}</p>
 			</div>
 		</div>
 	</div>
