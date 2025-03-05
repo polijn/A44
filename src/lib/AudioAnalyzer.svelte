@@ -61,12 +61,15 @@
 
 	async function startTracking(): Promise<void> {
 		if (audioContext) return;
-
 		audioContext = new AudioContext({ sampleRate: 48000 });
 		analyser = audioContext.createAnalyser();
 
 		const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 		microphone = audioContext.createMediaStreamSource(stream);
+		microphone.connect(analyser);
+		analyser.fftSize = 128;
+		analyser.smoothingTimeConstant = 0.2;
+
 		pitchDetector = ml5.pitchDetection(
 			'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/',
 			audioContext,
@@ -93,9 +96,17 @@
 		clearInterval(interval);
 		isPlaying = false;
 	}
+	function getVolumeLevel() {
+		if (!analyser) return;
+		let dataArray = new Uint8Array(analyser.frequencyBinCount);
+		analyser.getByteFrequencyData(dataArray);
+		let volume = dataArray.reduce((a, b) => a + b) / dataArray.length / 255;
+		return volume;
+	}
 
+	// volumeLevel = volume;
 	function trackAudio(): void {
-		volumeLevel = 10;
+		volumeLevel = getVolumeLevel();
 		if (volumeLevel > threshold) {
 			playTime += 1;
 		} else {
