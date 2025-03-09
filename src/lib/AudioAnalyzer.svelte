@@ -34,11 +34,13 @@
 	let progress = $state<number>(0);
 	let trackPeriod = $state<number>(1);
 	let transposition = $state<number>(-2);
+	let targetNote = $state<string>('A4');
+	let targetFreq = $state<number>(440.0);
 	// Derived state
 	const barWidth = $derived<number>(volumeLevel * 100);
 
 	let pitchDetector = undefined;
-	let noteData = [];
+	let noteData = $state([]);
 
 	onMount(async () => {
 		const res = await fetch(
@@ -172,6 +174,11 @@
 			if (audioContext) audioContext.close();
 		};
 	});
+	// function updateTargetFreq() {
+	// 	const index = noteData.note.indexOf(targetNote);
+	// 	targetFreq = noteData.freq440[index];
+	// 	console.log('target Freq:', targetFreq);
+	// }
 </script>
 
 <div
@@ -229,6 +236,24 @@
 			>
 				<p>{parseInt(dominantNote.frequency - dominantFreq.toFixed(0))} Hz</p>
 			</div>
+
+			<div class="flex flex-col items-center space-y-4">
+				<select bind:value={targetFreq} class="rounded border p-2">
+					{#each noteData as data}
+						<option value={data.freq440}>{data.note}{data.octave}</option>
+					{/each}
+				</select>
+			</div>
+			<div
+				class="flex h-20 items-center justify-center rounded-2xl border border-pink-900 px-4 py-4 text-2xl"
+			>
+				<p>{parseInt(targetFreq - dominantFreq.toFixed(0))} Hz</p>
+			</div>
+			<!-- <div
+			class="flex h-20 items-center justify-center rounded-2xl border border-pink-900 px-4 py-4 text-2xl"
+		>
+			<p>{parseInt(targetFreq - dominantFreq.toFixed(0))} Hz</p>
+		</div> -->
 			<!-- <div
 				class="flex h-20 items-center justify-center rounded-2xl border border-violet-900 px-4 py-4 text-2xl"
 			>
