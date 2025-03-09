@@ -6,6 +6,7 @@
 	import Badge from '$lib/badge/Badge.svelte';
 	import Slider from '$lib/slider/Slider.svelte';
 	import { onMount } from 'svelte';
+	import SheetMusic from './SheetMusic.svelte';
 
 	let audioContext: AudioContext | null = null;
 	let analyser: AnalyserNode | null = null;
@@ -85,6 +86,7 @@
 		if (frequency) {
 			dominantFreq = frequency;
 			dominantNote = getClosestNoteTo440(frequency);
+			// console.log(dominantNote.note);
 		}
 	}
 
@@ -150,9 +152,11 @@
 
 		return {
 			note: `${closestNote.note}${closestNote.octave}`,
+			frequency: closestNote.freq440,
 			distanceUp: noteUp ? noteUp.freq440 - closestNote.freq440 : null,
 			distanceDown: noteDown ? closestNote.freq440 - noteDown.freq440 : null,
-			transPose: `${transPose.note}${transPose.octave}`
+			transPose: `${transPose.note}${transPose.octave}`,
+			midi: closestNote.midi
 		};
 	}
 
@@ -173,7 +177,7 @@
 <div
 	class="mx-auto max-w-xl rounded-2xl border border-pink-900 px-4 py-4 shadow-lg shadow-pink-600/60"
 >
-	<div class=" text-sm">
+	<div class="text-sm">
 		<Heading class=" mb-8">Instrument Practice Timer</Heading>
 		<Heatmap data={heatmapData} />
 
@@ -223,13 +227,16 @@
 			<div
 				class="flex h-20 items-center justify-center rounded-2xl border border-pink-900 px-4 py-4 text-2xl"
 			>
-				<p>{dominantFreq.toFixed(2)} Hz</p>
+				<p>{parseInt(dominantNote.frequency - dominantFreq.toFixed(0))} Hz</p>
 			</div>
-			<div
+			<!-- <div
 				class="flex h-20 items-center justify-center rounded-2xl border border-violet-900 px-4 py-4 text-2xl"
 			>
 				<p>Transposed (-2): {dominantNote.transPose}</p>
-			</div>
+			</div> -->
 		</div>
+
+		<!-- new stuff -->
+		<!-- <SheetMusic midi={dominantNote.midi} /> -->
 	</div>
 </div>
