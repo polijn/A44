@@ -42,7 +42,7 @@
   button-accent-color="#ffffff"
   radius="large"
   size="full"
-  position="top-left"
+  position="top-right"
   main-label="chat WITH AI"
   start-button-text="Start"
   end-button-text="End Call"
